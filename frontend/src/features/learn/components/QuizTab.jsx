@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa'
+import ClockFace from './ClockFace'
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D']
 
@@ -36,6 +37,8 @@ export default function QuizTab({ problems, onComplete }) {
   const isComparisonVisual = problem.subtype === 'comparison_visual'
   const isShapeIdentify = problem.subtype === 'shape_identify'
   const isPatternPick = problem.subtype === 'pattern_pick'
+  const isEvenOdd = problem.subtype === 'even_odd'
+  const isSizePick = problem.subtype === 'size_pick'
 
   const selectAnswer = (option) => {
     if (result) return
@@ -117,7 +120,23 @@ export default function QuizTab({ problems, onComplete }) {
           className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 sm:p-8"
         >
           {/* Question */}
-          {isShapeIdentify ? (
+          {problem.subtype === 'clock' ? (
+            <div className="text-center mb-8">
+              {(() => {
+                const ans = String(problem.answer)
+                const parts = ans.includes(':') ? ans.split(':') : [ans, '0']
+                const h = parseInt(parts[0]) || 12
+                const m = parseInt(parts[1]) || 0
+                return <ClockFace hour={h} minute={m} size={220} />
+              })()}
+              <p className="text-xl sm:text-2xl font-bold text-gray-700 mt-4 mb-2">
+                {problem.question}
+              </p>
+              <p className="text-lg sm:text-xl text-gray-500">
+                {problem.question_text}
+              </p>
+            </div>
+          ) : isShapeIdentify ? (
             <div className="text-center mb-8">
               <p className="text-xl sm:text-2xl font-bold text-gray-700 mb-4">
                 {problem.question}
@@ -160,10 +179,19 @@ export default function QuizTab({ problems, onComplete }) {
           ) : (
             <div className="text-center mb-8">
               <div className="text-5xl mb-4">🎯</div>
-              <p className="text-xl sm:text-2xl font-bold text-gray-700 mb-2">
-                {problem.question}
-              </p>
-              <p className="text-3xl sm:text-4xl font-extrabold text-gray-800 tracking-wider">
+              {/* Only show question if it adds info beyond question_text */}
+              {problem.question && problem.question_text &&
+                !problem.question_text.includes(problem.question) &&
+                !problem.question.includes(problem.question_text) && (
+                <p className="text-xl sm:text-2xl font-bold text-gray-700 mb-2">
+                  {problem.question}
+                </p>
+              )}
+              <p className={`font-extrabold text-gray-800 whitespace-pre-line ${
+                problem.question_text && problem.question_text.length > 60
+                  ? 'text-xl sm:text-2xl'
+                  : 'text-3xl sm:text-4xl tracking-wider'
+              }`}>
                 {problem.question_text}
               </p>
             </div>
@@ -359,6 +387,105 @@ export default function QuizTab({ problems, onComplete }) {
                         className="mt-1"
                       >
                         <FaTimesCircle className="text-red-500 text-xl" />
+                      </motion.span>
+                    )}
+                  </motion.button>
+                )
+              })}
+            </div>
+          ) : isEvenOdd ? (
+            <div className="flex justify-center gap-6 mb-6">
+              {["even", "odd"].map((option, i) => {
+                const isCorrectOption = option === problem.answer
+                const isSelected = selected !== null && selected === option
+                const icons = { even: '🔵', odd: '🔴' }
+                const idleColors = {
+                  even: 'from-blue-100 to-blue-50 border-blue-300 hover:border-blue-500',
+                  odd: 'from-orange-100 to-orange-50 border-orange-300 hover:border-orange-500',
+                }
+                return (
+                  <motion.button
+                    key={option}
+                    whileHover={!result ? { scale: 1.1, y: -4 } : {}}
+                    whileTap={!result ? { scale: 0.9 } : {}}
+                    onClick={() => selectAnswer(option)}
+                    disabled={!!result}
+                    className={`w-36 h-32 sm:w-40 sm:h-36 rounded-3xl flex flex-col items-center justify-center gap-2 border-4 shadow-lg transition-all ${
+                      result && isCorrectOption
+                        ? 'border-green-400 bg-gradient-to-br from-green-100 to-green-50 shadow-green-300'
+                        : result && isSelected && !isCorrectOption
+                        ? 'border-red-400 bg-gradient-to-br from-red-100 to-red-50 shadow-red-300'
+                        : result
+                        ? 'border-gray-200 bg-gray-50 opacity-40'
+                        : `bg-gradient-to-br ${idleColors[option]} hover:shadow-xl cursor-pointer`
+                    }`}
+                  >
+                    <span className="text-4xl">{icons[option]}</span>
+                    <span className={`text-xl font-extrabold capitalize ${
+                      result && isCorrectOption ? 'text-green-600'
+                        : result && isSelected && !isCorrectOption ? 'text-red-600'
+                        : result ? 'text-gray-300'
+                        : 'text-gray-700'
+                    }`}>
+                      {option}
+                    </span>
+                    {result && isCorrectOption && (
+                      <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                        <FaCheckCircle className="text-green-500 text-lg" />
+                      </motion.span>
+                    )}
+                    {result && isSelected && !isCorrectOption && (
+                      <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                        <FaTimesCircle className="text-red-500 text-lg" />
+                      </motion.span>
+                    )}
+                  </motion.button>
+                )
+              })}
+            </div>
+          ) : isSizePick ? (
+            <div className="flex justify-center gap-5 mb-6">
+              {options.map((option, i) => {
+                const isCorrectOption = String(option) === String(problem.answer)
+                const isSelected = selected !== null && String(selected) === String(option)
+                const idleColors = [
+                  'from-pink-100 to-pink-50 border-pink-300 hover:border-pink-500',
+                  'from-blue-100 to-blue-50 border-blue-300 hover:border-blue-500',
+                ]
+                return (
+                  <motion.button
+                    key={i}
+                    whileHover={!result ? { scale: 1.08, y: -4 } : {}}
+                    whileTap={!result ? { scale: 0.95 } : {}}
+                    onClick={() => selectAnswer(option)}
+                    disabled={!!result}
+                    className={`px-6 py-5 rounded-3xl flex flex-col items-center justify-center gap-1 border-4 shadow-lg transition-all min-w-[150px] ${
+                      result && isCorrectOption
+                        ? 'border-green-400 bg-gradient-to-br from-green-100 to-green-50 shadow-green-300'
+                        : result && isSelected && !isCorrectOption
+                        ? 'border-red-400 bg-gradient-to-br from-red-100 to-red-50 shadow-red-300'
+                        : result
+                        ? 'border-gray-200 bg-gray-50 opacity-40'
+                        : `bg-gradient-to-br ${idleColors[i]} hover:shadow-xl cursor-pointer`
+                    }`}
+                  >
+                    <span className="text-4xl">{option.split(' ').pop()}</span>
+                    <span className={`text-lg font-extrabold capitalize ${
+                      result && isCorrectOption ? 'text-green-600'
+                        : result && isSelected && !isCorrectOption ? 'text-red-600'
+                        : result ? 'text-gray-300'
+                        : 'text-gray-700'
+                    }`}>
+                      {option.split(' ').slice(0, -1).join(' ')}
+                    </span>
+                    {result && isCorrectOption && (
+                      <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                        <FaCheckCircle className="text-green-500 text-lg" />
+                      </motion.span>
+                    )}
+                    {result && isSelected && !isCorrectOption && (
+                      <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                        <FaTimesCircle className="text-red-500 text-lg" />
                       </motion.span>
                     )}
                   </motion.button>

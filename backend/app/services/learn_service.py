@@ -20,7 +20,7 @@ from app.schemas.learn import (
     LessonContentResponse,
     LessonCompleteResponse,
 )
-from app.features.learn.problem_generator import generate_problems
+from app.features.learn.generators import generate_problems
 
 
 # ─── Grades ──────────────────────────────────────────────────────

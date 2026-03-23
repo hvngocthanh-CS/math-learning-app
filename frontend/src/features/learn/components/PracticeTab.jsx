@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaLightbulb } from 'react-icons/fa'
+import ClockFace from './ClockFace'
 
 export default function PracticeTab({ problems, onComplete }) {
   const [current, setCurrent] = useState(0)
@@ -34,13 +35,35 @@ export default function PracticeTab({ problems, onComplete }) {
   const isComparison = problem.subtype === 'comparison'
   const isShapeIdentify = problem.subtype === 'shape_identify'
   const isPatternPick = problem.subtype === 'pattern_pick'
-  const isButtonMode = isComparison || isShapeIdentify || isPatternPick
+  const isEvenOdd = problem.subtype === 'even_odd'
+  const isSizePick = problem.subtype === 'size_pick'
+  const isClock = problem.subtype === 'clock'
+  const isButtonMode = isComparison || isShapeIdentify || isPatternPick || isEvenOdd || isSizePick
+  const isStringAnswer = typeof problem.answer === 'string'
 
   const checkAnswer = () => {
-    if (!answer.trim()) return
-    const isCorrect = isButtonMode
-      ? answer.toLowerCase() === String(problem.answer).toLowerCase()
-      : Math.abs(parseFloat(answer) - parseFloat(problem.answer)) < 0.01
+    if (isClock) {
+      // answer is stored as "hour:minute" from the two inputs
+      if (!answer.includes(':')) return
+      const [h, m] = answer.split(':')
+      if (!h.trim() || m === undefined) return
+      const correctStr = String(problem.answer)
+      // Normalize: "3" → "3:00", "3:30" stays
+      const correctNorm = correctStr.includes(':') ? correctStr : `${correctStr}:00`
+      const userNorm = `${parseInt(h)}:${(m || '0').padStart(2, '0')}`
+      var isCorrect = userNorm === correctNorm
+    } else if (!answer.trim()) {
+      return
+    } else {
+      var isCorrect
+      if (isButtonMode) {
+        isCorrect = answer.toLowerCase() === String(problem.answer).toLowerCase()
+      } else if (isStringAnswer) {
+        isCorrect = answer.trim().toLowerCase() === String(problem.answer).toLowerCase()
+      } else {
+        isCorrect = Math.abs(parseFloat(answer) - parseFloat(problem.answer)) < 0.01
+      }
+    }
 
     if (isCorrect) {
       setResult('correct')
@@ -121,7 +144,24 @@ export default function PracticeTab({ problems, onComplete }) {
           }`}
         >
           {/* Question */}
-          {isShapeIdentify ? (
+          {problem.subtype === 'clock' ? (
+            <div className="text-center mb-8">
+              {(() => {
+                // Parse hour/minute from answer: could be number (3) or string ("3:30")
+                const ans = String(problem.answer)
+                const parts = ans.includes(':') ? ans.split(':') : [ans, '0']
+                const h = parseInt(parts[0]) || 12
+                const m = parseInt(parts[1]) || 0
+                return <ClockFace hour={h} minute={m} size={220} />
+              })()}
+              <p className="text-xl sm:text-2xl font-bold text-gray-700 mt-4 mb-2">
+                {problem.question}
+              </p>
+              <p className="text-lg sm:text-xl text-gray-500">
+                {problem.question_text}
+              </p>
+            </div>
+          ) : isShapeIdentify ? (
             <div className="text-center mb-8">
               <p className="text-xl sm:text-2xl font-bold text-gray-700 mb-4">
                 {problem.question}
@@ -142,17 +182,113 @@ export default function PracticeTab({ problems, onComplete }) {
               <div className="text-5xl mb-4">
                 {problem.emoji || '🔢'}
               </div>
-              <p className="text-xl sm:text-2xl font-bold text-gray-700 mb-2">
-                {problem.question}
-              </p>
-              <p className="text-3xl sm:text-4xl font-extrabold text-gray-800 tracking-wider">
+              {/* Only show question if it adds info beyond question_text */}
+              {problem.question && problem.question_text &&
+                !problem.question_text.includes(problem.question) &&
+                !problem.question.includes(problem.question_text) && (
+                <p className="text-xl sm:text-2xl font-bold text-gray-700 mb-2">
+                  {problem.question}
+                </p>
+              )}
+              <p className={`font-extrabold text-gray-800 whitespace-pre-line ${
+                problem.question_text && problem.question_text.length > 60
+                  ? 'text-xl sm:text-2xl'
+                  : 'text-3xl sm:text-4xl tracking-wider'
+              }`}>
                 {problem.question_text}
               </p>
             </div>
           )}
 
           {/* Answer Input */}
-          {isPatternPick ? (
+          {isSizePick ? (
+            <div className="flex justify-center gap-5 mb-6">
+              {(problem.options || []).map((option, i) => {
+                const isSelected = answer === option
+                const isCorrect = result && option === problem.answer
+                const isWrong = result === 'wrong' && isSelected && option !== problem.answer
+                const idleColors = [
+                  'border-pink-300 bg-pink-50 hover:border-pink-500 hover:bg-pink-100',
+                  'border-blue-300 bg-blue-50 hover:border-blue-500 hover:bg-blue-100',
+                ]
+                return (
+                  <motion.button
+                    key={i}
+                    whileHover={!result ? { scale: 1.08, y: -4 } : {}}
+                    whileTap={!result ? { scale: 0.95 } : {}}
+                    onClick={() => {
+                      if (result) return
+                      setAnswer(option)
+                    }}
+                    disabled={!!result}
+                    className={`px-6 py-5 rounded-2xl border-4 shadow-md transition-all flex flex-col items-center justify-center gap-1 min-w-[140px] ${
+                      isCorrect
+                        ? 'border-green-400 bg-green-50 shadow-green-200'
+                        : isWrong
+                        ? 'border-red-400 bg-red-50 shadow-red-200'
+                        : isSelected
+                        ? 'border-purple-400 bg-purple-50 shadow-purple-200'
+                        : `${idleColors[i]} cursor-pointer hover:shadow-lg`
+                    }`}
+                  >
+                    <span className="text-4xl">{option.split(' ').pop()}</span>
+                    <span className={`text-lg font-extrabold capitalize ${
+                      isCorrect ? 'text-green-600'
+                        : isWrong ? 'text-red-600'
+                        : isSelected ? 'text-purple-600'
+                        : 'text-gray-700'
+                    }`}>
+                      {option.split(' ').slice(0, -1).join(' ')}
+                    </span>
+                  </motion.button>
+                )
+              })}
+            </div>
+          ) : isEvenOdd ? (
+            <div className="flex justify-center gap-6 mb-6">
+              {["even", "odd"].map((option) => {
+                const isSelected = answer === option
+                const isCorrect = result && option === problem.answer
+                const isWrong = result === 'wrong' && isSelected && option !== problem.answer
+                const icons = { even: '🔵', odd: '🔴' }
+                const idleColors = {
+                  even: 'border-blue-300 bg-blue-50 hover:border-blue-500 hover:bg-blue-100',
+                  odd: 'border-orange-300 bg-orange-50 hover:border-orange-500 hover:bg-orange-100',
+                }
+                return (
+                  <motion.button
+                    key={option}
+                    whileHover={!result ? { scale: 1.1, y: -4 } : {}}
+                    whileTap={!result ? { scale: 0.9 } : {}}
+                    onClick={() => {
+                      if (result) return
+                      setAnswer(option)
+                    }}
+                    disabled={!!result}
+                    className={`w-36 h-28 sm:w-40 sm:h-32 rounded-2xl border-4 shadow-md transition-all flex flex-col items-center justify-center gap-2 ${
+                      isCorrect
+                        ? 'border-green-400 bg-green-50 shadow-green-200'
+                        : isWrong
+                        ? 'border-red-400 bg-red-50 shadow-red-200'
+                        : isSelected
+                        ? 'border-purple-400 bg-purple-50 shadow-purple-200'
+                        : `${idleColors[option]} cursor-pointer hover:shadow-lg`
+                    }`}
+                  >
+                    <span className="text-4xl">{icons[option]}</span>
+                    <span className={`text-xl font-extrabold capitalize ${
+                      isCorrect ? 'text-green-600'
+                        : isWrong ? 'text-red-600'
+                        : isSelected ? 'text-purple-600'
+                        : 'text-gray-700'
+                    }`}>
+                      {option}
+                    </span>
+                  </motion.button>
+                )
+              })}
+            </div>
+          ) : isPatternPick ? (
             <div className="flex justify-center gap-6 mb-6">
               {(problem.options || []).map((emoji, i) => {
                 const isSelected = answer === emoji
@@ -259,13 +395,67 @@ export default function PracticeTab({ problems, onComplete }) {
                 )
               })}
             </div>
+          ) : isClock ? (
+            <div className="max-w-xs mx-auto mb-6">
+              <motion.div
+                animate={result === 'wrong' ? { x: [0, -10, 10, -10, 10, 0] } : {}}
+                transition={{ duration: 0.4 }}
+                className="flex items-center justify-center gap-3"
+              >
+                <input
+                  ref={inputRef}
+                  type="number"
+                  min="1"
+                  max="12"
+                  value={answer.split(':')[0] || ''}
+                  onChange={(e) => {
+                    const h = e.target.value
+                    const m = answer.split(':')[1] || '00'
+                    setAnswer(`${h}:${m}`)
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && (result === 'wrong' ? retryProblem() : checkAnswer())}
+                  placeholder="H"
+                  disabled={result === 'correct'}
+                  className={`w-20 text-center text-3xl font-extrabold p-3 rounded-2xl border-3 outline-none transition-all ${
+                    result === 'correct'
+                      ? 'border-green-400 bg-green-50 text-green-600'
+                      : result === 'wrong'
+                      ? 'border-red-400 bg-red-50 text-red-600'
+                      : 'border-gray-200 focus:border-purple-400 text-gray-800'
+                  }`}
+                />
+                <span className="text-4xl font-extrabold text-gray-400">:</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="30"
+                  step="30"
+                  value={answer.split(':')[1] || ''}
+                  onChange={(e) => {
+                    const h = answer.split(':')[0] || ''
+                    const m = e.target.value
+                    setAnswer(`${h}:${m}`)
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && (result === 'wrong' ? retryProblem() : checkAnswer())}
+                  placeholder="MM"
+                  disabled={result === 'correct'}
+                  className={`w-24 text-center text-3xl font-extrabold p-3 rounded-2xl border-3 outline-none transition-all ${
+                    result === 'correct'
+                      ? 'border-green-400 bg-green-50 text-green-600'
+                      : result === 'wrong'
+                      ? 'border-red-400 bg-red-50 text-red-600'
+                      : 'border-gray-200 focus:border-purple-400 text-gray-800'
+                  }`}
+                />
+              </motion.div>
+            </div>
           ) : (
             <div className="max-w-xs mx-auto mb-6">
               <motion.input
                 ref={inputRef}
                 animate={result === 'wrong' ? { x: [0, -10, 10, -10, 10, 0] } : {}}
                 transition={{ duration: 0.4 }}
-                type="number"
+                type={isStringAnswer ? "text" : "number"}
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (result === 'wrong' ? retryProblem() : checkAnswer())}
