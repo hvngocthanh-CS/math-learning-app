@@ -35,6 +35,7 @@ def generate_problems(config: Dict[str, Any], mode: str = "practice") -> List[Di
 
     generator = GENERATOR_REGISTRY.get(problem_type)
     if not generator:
+        print(f"[WARN] Generator '{problem_type}' NOT FOUND. Registry has {len(GENERATOR_REGISTRY)} generators: {sorted(GENERATOR_REGISTRY.keys())}")
         return []
 
     # Generators marked as bulk produce all problems at once
@@ -60,3 +61,9 @@ def generate_problems(config: Dict[str, Any], mode: str = "practice") -> List[Di
 from app.features.learn.generators import grade1  # noqa: E402,F401
 from app.features.learn.generators import grade2  # noqa: E402,F401
 from app.features.learn.generators import grade3  # noqa: E402,F401
+try:
+    from app.features.learn.generators import grade4  # noqa: E402,F401
+    print(f"[INFO] Grade 4 imported OK. Registry now has {len(GENERATOR_REGISTRY)} generators.")
+except Exception as e:
+    print(f"[ERROR] Failed to import grade4: {e}")
+    import traceback; traceback.print_exc()
