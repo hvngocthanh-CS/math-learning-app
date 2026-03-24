@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa'
 import ClockFace from './ClockFace'
+import SvgVisual from './SvgVisual'
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D']
 
@@ -39,6 +40,7 @@ export default function QuizTab({ problems, onComplete }) {
   const isPatternPick = problem.subtype === 'pattern_pick'
   const isEvenOdd = problem.subtype === 'even_odd'
   const isSizePick = problem.subtype === 'size_pick'
+  const isFractionInput = problem.subtype === 'fraction_input'
 
   const selectAnswer = (option) => {
     if (result) return
@@ -162,12 +164,14 @@ export default function QuizTab({ problems, onComplete }) {
                 return (
                   <div className="flex items-center justify-center gap-4 sm:gap-6">
                     <div className="flex-1 bg-gradient-to-br from-pink-50 to-pink-100 border-2 border-pink-200 rounded-2xl p-4 sm:p-5 text-center">
+                      {problem.image_left && <SvgVisual content={problem.image_left} className="flex justify-center mb-2" />}
                       <div className="text-3xl sm:text-4xl leading-relaxed break-words">
                         {parts[0]}
                       </div>
                     </div>
                     <div className="text-4xl sm:text-5xl font-extrabold text-purple-400">?</div>
                     <div className="flex-1 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-2xl p-4 sm:p-5 text-center">
+                      {problem.image_right && <SvgVisual content={problem.image_right} className="flex justify-center mb-2" />}
                       <div className="text-3xl sm:text-4xl leading-relaxed break-words">
                         {parts[1]}
                       </div>
@@ -178,7 +182,24 @@ export default function QuizTab({ problems, onComplete }) {
             </div>
           ) : (
             <div className="text-center mb-8">
-              <div className="text-5xl mb-4">🎯</div>
+              {/* SVG images for fraction problems */}
+              {(problem.image_left && problem.image_right) ? (
+                <div className="flex items-center justify-center gap-4 sm:gap-8 mb-4">
+                  <div className="flex flex-col items-center">
+                    <SvgVisual content={problem.image_left} />
+                  </div>
+                  <div className="text-4xl font-extrabold text-purple-400">?</div>
+                  <div className="flex flex-col items-center">
+                    <SvgVisual content={problem.image_right} />
+                  </div>
+                </div>
+              ) : problem.image ? (
+                <div className="flex justify-center mb-4">
+                  <SvgVisual content={problem.image} />
+                </div>
+              ) : (
+                <div className="text-5xl mb-4">🎯</div>
+              )}
               {/* Only show question if it adds info beyond question_text */}
               {problem.question && problem.question_text &&
                 !problem.question_text.includes(problem.question) &&
@@ -485,6 +506,71 @@ export default function QuizTab({ problems, onComplete }) {
                     )}
                     {result && isSelected && !isCorrectOption && (
                       <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                        <FaTimesCircle className="text-red-500 text-lg" />
+                      </motion.span>
+                    )}
+                  </motion.button>
+                )
+              })}
+            </div>
+          ) : isFractionInput ? (
+            <div className="flex justify-center gap-4 sm:gap-5 mb-6 flex-wrap">
+              {options.map((frac, i) => {
+                const isCorrectOption = String(frac) === String(problem.answer)
+                const isSelected = selected !== null && String(selected) === String(frac)
+                const idleColors = [
+                  'from-pink-100 to-pink-50 border-pink-300 hover:border-pink-500',
+                  'from-purple-100 to-purple-50 border-purple-300 hover:border-purple-500',
+                  'from-blue-100 to-blue-50 border-blue-300 hover:border-blue-500',
+                  'from-orange-100 to-orange-50 border-orange-300 hover:border-orange-500',
+                ]
+                const parts = String(frac).split('/')
+                return (
+                  <motion.button
+                    key={i}
+                    whileHover={!result ? { scale: 1.1, y: -4 } : {}}
+                    whileTap={!result ? { scale: 0.9 } : {}}
+                    onClick={() => selectAnswer(frac)}
+                    disabled={!!result}
+                    className={`w-24 h-28 sm:w-28 sm:h-32 rounded-3xl flex flex-col items-center justify-center border-4 shadow-lg transition-all ${
+                      result && isCorrectOption
+                        ? 'border-green-400 bg-gradient-to-br from-green-100 to-green-50 shadow-green-300'
+                        : result && isSelected && !isCorrectOption
+                        ? 'border-red-400 bg-gradient-to-br from-red-100 to-red-50 shadow-red-300'
+                        : result
+                        ? 'border-gray-200 bg-gray-50 opacity-40'
+                        : `bg-gradient-to-br ${idleColors[i % idleColors.length]} hover:shadow-xl cursor-pointer`
+                    }`}
+                  >
+                    <span className={`text-3xl sm:text-4xl font-extrabold ${
+                      result && isCorrectOption ? 'text-green-600'
+                        : result && isSelected && !isCorrectOption ? 'text-red-600'
+                        : result ? 'text-gray-300'
+                        : 'text-gray-800'
+                    }`}>
+                      {parts[0]}
+                    </span>
+                    <div className={`w-12 sm:w-14 h-1 rounded-full my-1 ${
+                      result && isCorrectOption ? 'bg-green-500'
+                        : result && isSelected && !isCorrectOption ? 'bg-red-500'
+                        : result ? 'bg-gray-300'
+                        : 'bg-purple-400'
+                    }`} />
+                    <span className={`text-3xl sm:text-4xl font-extrabold ${
+                      result && isCorrectOption ? 'text-green-600'
+                        : result && isSelected && !isCorrectOption ? 'text-red-600'
+                        : result ? 'text-gray-300'
+                        : 'text-gray-800'
+                    }`}>
+                      {parts[1]}
+                    </span>
+                    {result && isCorrectOption && (
+                      <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-2 -right-2">
+                        <FaCheckCircle className="text-green-500 text-lg" />
+                      </motion.span>
+                    )}
+                    {result && isSelected && !isCorrectOption && (
+                      <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-2 -right-2">
                         <FaTimesCircle className="text-red-500 text-lg" />
                       </motion.span>
                     )}

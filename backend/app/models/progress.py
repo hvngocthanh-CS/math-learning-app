@@ -22,8 +22,8 @@ class StudentProgress(Base):
     __tablename__ = "student_progress"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    student_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    lesson_id = Column(UUID(as_uuid=True), ForeignKey("lessons.id"), nullable=False)
+    student_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    lesson_id = Column(UUID(as_uuid=True), ForeignKey("lessons.id"), nullable=False, index=True)
     status = Column(Enum(ProgressStatus), nullable=False, default=ProgressStatus.locked)
     score = Column(Integer, default=0)
     stars_earned = Column(Integer, default=0)

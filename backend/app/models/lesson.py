@@ -15,7 +15,7 @@ class Chapter(Base):
     __tablename__ = "chapters"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    grade_id = Column(UUID(as_uuid=True), ForeignKey("grades.id"), nullable=False)
+    grade_id = Column(UUID(as_uuid=True), ForeignKey("grades.id"), nullable=False, index=True)
     title = Column(String, nullable=False)
     order = Column(Integer, nullable=False)
     description = Column(String, nullable=True)
@@ -28,7 +28,7 @@ class Lesson(Base):
     __tablename__ = "lessons"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    chapter_id = Column(UUID(as_uuid=True), ForeignKey("chapters.id"), nullable=False)
+    chapter_id = Column(UUID(as_uuid=True), ForeignKey("chapters.id"), nullable=False, index=True)
     title = Column(String, nullable=False)
     order = Column(Integer, nullable=False)
     content_type = Column(Enum(ContentType), nullable=False, default=ContentType.video)

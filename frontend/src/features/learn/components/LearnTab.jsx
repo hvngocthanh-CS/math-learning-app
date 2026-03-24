@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { FaLightbulb } from 'react-icons/fa'
+import SvgVisual from './SvgVisual'
 
 const CARD_COLORS = [
   'from-pink-100 to-pink-50 border-pink-200',
@@ -78,8 +79,11 @@ export default function LearnTab({ content, onComplete }) {
                 transition={{ delay: 0.15 * i, type: 'spring', stiffness: 200 }}
                 className={`bg-gradient-to-br ${CARD_COLORS[i % CARD_COLORS.length]} rounded-2xl p-5 border-2 text-center`}
               >
-                <div className="text-3xl sm:text-4xl mb-3 tracking-wider">
-                  {example.emoji || example.visual || '🔢'}
+                <div className="text-3xl sm:text-4xl mb-3 tracking-wider flex justify-center">
+                  {(example.emoji || example.visual || '🔢').includes('<svg')
+                    ? <SvgVisual content={example.emoji || example.visual} />
+                    : (example.emoji || example.visual || '🔢')
+                  }
                 </div>
                 <div className="font-bold text-gray-700 text-lg">
                   {example.text.split('\n').map((line, j) => (

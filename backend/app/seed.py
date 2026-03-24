@@ -17,6 +17,7 @@ from app.models.lesson import Chapter, Lesson, ContentType, LessonContent
 from app.models.progress import StudentProgress, ProgressStatus
 from app.features.learn.seed_data.grade1 import GRADE1_CHAPTERS
 from app.features.learn.seed_data.grade2 import GRADE2_CHAPTERS
+from app.features.learn.seed_data.grade3 import GRADE3_CHAPTERS
 
 
 def _seed_grade(db, grade, chapters_data, grade_num):
@@ -224,7 +225,7 @@ def seed(reset: bool = False, update: bool = False, reseed_grade: int = None):
     print("Creating tables (if not exist)...")
     Base.metadata.create_all(bind=engine)
 
-    grade_data = {1: GRADE1_CHAPTERS, 2: GRADE2_CHAPTERS}
+    grade_data = {1: GRADE1_CHAPTERS, 2: GRADE2_CHAPTERS, 3: GRADE3_CHAPTERS}
 
     db = SessionLocal()
     try:

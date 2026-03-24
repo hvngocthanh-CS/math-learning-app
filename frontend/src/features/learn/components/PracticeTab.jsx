@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaLightbulb } from 'react-icons/fa'
 import ClockFace from './ClockFace'
+import SvgVisual from './SvgVisual'
 
 export default function PracticeTab({ problems, onComplete }) {
   const [current, setCurrent] = useState(0)
@@ -38,11 +39,19 @@ export default function PracticeTab({ problems, onComplete }) {
   const isEvenOdd = problem.subtype === 'even_odd'
   const isSizePick = problem.subtype === 'size_pick'
   const isClock = problem.subtype === 'clock'
+  const isFractionInput = problem.subtype === 'fraction_input'
   const isButtonMode = isComparison || isShapeIdentify || isPatternPick || isEvenOdd || isSizePick
   const isStringAnswer = typeof problem.answer === 'string'
 
   const checkAnswer = () => {
-    if (isClock) {
+    if (isFractionInput) {
+      // answer is stored as "numerator/denominator" from the two inputs
+      if (!answer.includes('/')) return
+      const [n, d] = answer.split('/')
+      if (!n || !d) return
+      const userNorm = `${parseInt(n)}/${parseInt(d)}`
+      var isCorrect = userNorm === String(problem.answer)
+    } else if (isClock) {
       // answer is stored as "hour:minute" from the two inputs
       if (!answer.includes(':')) return
       const [h, m] = answer.split(':')
@@ -179,9 +188,26 @@ export default function PracticeTab({ problems, onComplete }) {
             </div>
           ) : (
             <div className="text-center mb-8">
-              <div className="text-5xl mb-4">
-                {problem.emoji || '🔢'}
-              </div>
+              {/* SVG images for fraction problems */}
+              {(problem.image_left && problem.image_right) ? (
+                <div className="flex items-center justify-center gap-4 sm:gap-8 mb-4">
+                  <div className="flex flex-col items-center">
+                    <SvgVisual content={problem.image_left} />
+                  </div>
+                  <div className="text-4xl font-extrabold text-purple-400">?</div>
+                  <div className="flex flex-col items-center">
+                    <SvgVisual content={problem.image_right} />
+                  </div>
+                </div>
+              ) : problem.image ? (
+                <div className="flex justify-center mb-4">
+                  <SvgVisual content={problem.image} />
+                </div>
+              ) : (
+                <div className="text-5xl mb-4">
+                  {problem.emoji || '🔢'}
+                </div>
+              )}
               {/* Only show question if it adds info beyond question_text */}
               {problem.question && problem.question_text &&
                 !problem.question_text.includes(problem.question) &&
@@ -394,6 +420,59 @@ export default function PracticeTab({ problems, onComplete }) {
                   </motion.button>
                 )
               })}
+            </div>
+          ) : isFractionInput ? (
+            <div className="max-w-xs mx-auto mb-6">
+              <motion.div
+                animate={result === 'wrong' ? { x: [0, -10, 10, -10, 10, 0] } : {}}
+                transition={{ duration: 0.4 }}
+                className="flex items-center justify-center gap-2"
+              >
+                <input
+                  ref={inputRef}
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={answer.split('/')[0] || ''}
+                  onChange={(e) => {
+                    const n = e.target.value
+                    const d = answer.split('/')[1] || ''
+                    setAnswer(`${n}/${d}`)
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && (result === 'wrong' ? retryProblem() : checkAnswer())}
+                  placeholder="?"
+                  disabled={result === 'correct'}
+                  className={`w-20 text-center text-3xl font-extrabold p-3 rounded-2xl border-3 outline-none transition-all ${
+                    result === 'correct'
+                      ? 'border-green-400 bg-green-50 text-green-600'
+                      : result === 'wrong'
+                      ? 'border-red-400 bg-red-50 text-red-600'
+                      : 'border-gray-200 focus:border-purple-400 text-gray-800'
+                  }`}
+                />
+                <span className="text-5xl font-extrabold text-purple-400 select-none">/</span>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={answer.split('/')[1] || ''}
+                  onChange={(e) => {
+                    const n = answer.split('/')[0] || ''
+                    const d = e.target.value
+                    setAnswer(`${n}/${d}`)
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && (result === 'wrong' ? retryProblem() : checkAnswer())}
+                  placeholder="?"
+                  disabled={result === 'correct'}
+                  className={`w-20 text-center text-3xl font-extrabold p-3 rounded-2xl border-3 outline-none transition-all ${
+                    result === 'correct'
+                      ? 'border-green-400 bg-green-50 text-green-600'
+                      : result === 'wrong'
+                      ? 'border-red-400 bg-red-50 text-red-600'
+                      : 'border-gray-200 focus:border-purple-400 text-gray-800'
+                  }`}
+                />
+              </motion.div>
             </div>
           ) : isClock ? (
             <div className="max-w-xs mx-auto mb-6">

@@ -59,3 +59,4 @@ def generate_problems(config: Dict[str, Any], mode: str = "practice") -> List[Di
 # ── Import grade subpackages to trigger registration ────────────────
 from app.features.learn.generators import grade1  # noqa: E402,F401
 from app.features.learn.generators import grade2  # noqa: E402,F401
+from app.features.learn.generators import grade3  # noqa: E402,F401

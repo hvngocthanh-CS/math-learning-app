@@ -5,7 +5,7 @@ from typing import List, Optional
 from uuid import UUID
 
 from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.models.grade import Grade
 from app.models.lesson import Chapter, Lesson, LessonContent
@@ -26,35 +26,54 @@ from app.features.learn.generators import generate_problems
 # ─── Grades ──────────────────────────────────────────────────────
 
 def list_grades(db: Session, student_id: UUID) -> List[GradeResponse]:
+    """List all grades with lesson counts and completion stats in minimal queries."""
     grades = db.query(Grade).order_by(Grade.number).all()
-    result = []
-    for grade in grades:
-        total_chapters = db.query(func.count(Chapter.id)).filter(Chapter.grade_id == grade.id).scalar()
-        total_lessons = (
-            db.query(func.count(Lesson.id))
-            .join(Chapter, Lesson.chapter_id == Chapter.id)
-            .filter(Chapter.grade_id == grade.id)
-            .scalar()
+    if not grades:
+        return []
+
+    grade_ids = [g.id for g in grades]
+
+    # Single query: total chapters per grade
+    chapter_counts = dict(
+        db.query(Chapter.grade_id, func.count(Chapter.id))
+        .filter(Chapter.grade_id.in_(grade_ids))
+        .group_by(Chapter.grade_id)
+        .all()
+    )
+
+    # Single query: total lessons per grade
+    lesson_counts = dict(
+        db.query(Chapter.grade_id, func.count(Lesson.id))
+        .join(Lesson, Lesson.chapter_id == Chapter.id)
+        .filter(Chapter.grade_id.in_(grade_ids))
+        .group_by(Chapter.grade_id)
+        .all()
+    )
+
+    # Single query: completed lessons per grade for this student
+    completed_counts = dict(
+        db.query(Chapter.grade_id, func.count(StudentProgress.id))
+        .join(Lesson, Lesson.chapter_id == Chapter.id)
+        .join(StudentProgress, StudentProgress.lesson_id == Lesson.id)
+        .filter(
+            Chapter.grade_id.in_(grade_ids),
+            StudentProgress.student_id == student_id,
+            StudentProgress.status == ProgressStatus.completed,
         )
-        completed_lessons = (
-            db.query(func.count(StudentProgress.id))
-            .join(Lesson, StudentProgress.lesson_id == Lesson.id)
-            .join(Chapter, Lesson.chapter_id == Chapter.id)
-            .filter(
-                Chapter.grade_id == grade.id,
-                StudentProgress.student_id == student_id,
-                StudentProgress.status == ProgressStatus.completed,
-            )
-            .scalar()
+        .group_by(Chapter.grade_id)
+        .all()
+    )
+
+    return [
+        GradeResponse(
+            id=g.id, number=g.number, name=g.name,
+            description=g.description, icon_url=g.icon_url,
+            total_chapters=chapter_counts.get(g.id, 0),
+            total_lessons=lesson_counts.get(g.id, 0),
+            completed_lessons=completed_counts.get(g.id, 0),
         )
-        result.append(GradeResponse(
-            id=grade.id, number=grade.number, name=grade.name,
-            description=grade.description, icon_url=grade.icon_url,
-            total_chapters=total_chapters or 0,
-            total_lessons=total_lessons or 0,
-            completed_lessons=completed_lessons or 0,
-        ))
-    return result
+        for g in grades
+    ]
 
 
 # ─── Chapters with unlock logic ─────────────────────────────────
@@ -64,17 +83,23 @@ def get_grade_chapters(db: Session, grade_id: UUID, student_id: UUID) -> List[Ch
     if not grade:
         return None  # caller raises 404
 
-    chapters = db.query(Chapter).filter(Chapter.grade_id == grade_id).order_by(Chapter.order).all()
-    all_lessons = (
-        db.query(Lesson)
-        .join(Chapter, Lesson.chapter_id == Chapter.id)
+    # Single query: all chapters with their lessons eagerly loaded
+    chapters = (
+        db.query(Chapter)
+        .options(joinedload(Chapter.lessons))
         .filter(Chapter.grade_id == grade_id)
-        .order_by(Chapter.order, Lesson.order)
+        .order_by(Chapter.order)
         .all()
     )
+
+    # Build ordered lesson IDs across all chapters
+    all_lessons = []
+    for ch in chapters:
+        for lesson in sorted(ch.lessons, key=lambda l: l.order):
+            all_lessons.append(lesson)
     ordered_ids = [l.id for l in all_lessons]
 
-    # Build progress map
+    # Single query: all progress for these lessons
     progress_map = {}
     if ordered_ids:
         for p in db.query(StudentProgress).filter(
@@ -83,15 +108,18 @@ def get_grade_chapters(db: Session, grade_id: UUID, student_id: UUID) -> List[Ch
         ).all():
             progress_map[p.lesson_id] = p
 
+    # Build ID→index map for O(1) lookups
+    id_index = {lid: i for i, lid in enumerate(ordered_ids)}
+
     result = []
     for chapter in chapters:
-        lessons = db.query(Lesson).filter(Lesson.chapter_id == chapter.id).order_by(Lesson.order).all()
+        lessons = sorted(chapter.lessons, key=lambda l: l.order)
         completed_count = 0
         lesson_list = []
 
         for lesson in lessons:
             progress = progress_map.get(lesson.id)
-            lesson_status = _determine_lesson_status(lesson.id, progress, ordered_ids, progress_map)
+            lesson_status = _determine_lesson_status(lesson.id, progress, ordered_ids, progress_map, id_index)
             if progress and progress.status == ProgressStatus.completed:
                 completed_count += 1
 
@@ -112,11 +140,14 @@ def get_grade_chapters(db: Session, grade_id: UUID, student_id: UUID) -> List[Ch
     return result
 
 
-def _determine_lesson_status(lesson_id, progress, ordered_ids, progress_map) -> ProgressStatus:
+def _determine_lesson_status(lesson_id, progress, ordered_ids, progress_map, id_index=None) -> ProgressStatus:
     """Determine unlock status based on sequential progression."""
     if progress:
         return progress.status
-    idx = ordered_ids.index(lesson_id) if lesson_id in ordered_ids else -1
+    if id_index:
+        idx = id_index.get(lesson_id, -1)
+    else:
+        idx = ordered_ids.index(lesson_id) if lesson_id in ordered_ids else -1
     if idx == 0:
         return ProgressStatus.in_progress
     if idx > 0:
@@ -134,34 +165,50 @@ def get_chapter_lessons(db: Session, chapter_id: UUID, student_id: UUID) -> Opti
         return None
 
     lessons = db.query(Lesson).filter(Lesson.chapter_id == chapter_id).order_by(Lesson.order).all()
-    result = []
-    for lesson in lessons:
-        progress = db.query(StudentProgress).filter(
+
+    # Single query: all progress for these lessons
+    lesson_ids = [l.id for l in lessons]
+    progress_map = {}
+    if lesson_ids:
+        for p in db.query(StudentProgress).filter(
             StudentProgress.student_id == student_id,
-            StudentProgress.lesson_id == lesson.id,
-        ).first()
-        result.append(LessonResponse(
+            StudentProgress.lesson_id.in_(lesson_ids),
+        ).all():
+            progress_map[p.lesson_id] = p
+
+    return [
+        LessonResponse(
             id=lesson.id, chapter_id=lesson.chapter_id, title=lesson.title,
             order=lesson.order, content_type=lesson.content_type,
             content_url=lesson.content_url, description=lesson.description,
             is_locked=lesson.is_locked,
-            status=progress.status if progress else ProgressStatus.locked,
-            score=progress.score if progress else 0,
-            stars_earned=progress.stars_earned if progress else 0,
-        ))
-    return result
+            status=progress_map[lesson.id].status if lesson.id in progress_map else ProgressStatus.locked,
+            score=progress_map[lesson.id].score if lesson.id in progress_map else 0,
+            stars_earned=progress_map[lesson.id].stars_earned if lesson.id in progress_map else 0,
+        )
+        for lesson in lessons
+    ]
 
 
 def get_lesson_detail(db: Session, lesson_id: UUID, student_id: UUID) -> Optional[LessonDetailResponse]:
-    lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
+    # Single query with joins
+    lesson = (
+        db.query(Lesson)
+        .options(joinedload(Lesson.chapter).joinedload(Chapter.grade))
+        .filter(Lesson.id == lesson_id)
+        .first()
+    )
     if not lesson:
         return None
-    chapter = db.query(Chapter).filter(Chapter.id == lesson.chapter_id).first()
-    grade = db.query(Grade).filter(Grade.id == chapter.grade_id).first() if chapter else None
+
     progress = db.query(StudentProgress).filter(
         StudentProgress.student_id == student_id,
         StudentProgress.lesson_id == lesson.id,
     ).first()
+
+    chapter = lesson.chapter
+    grade = chapter.grade if chapter else None
+
     return LessonDetailResponse(
         id=lesson.id, chapter_id=lesson.chapter_id, title=lesson.title,
         order=lesson.order, content_type=lesson.content_type,
@@ -176,10 +223,12 @@ def get_lesson_detail(db: Session, lesson_id: UUID, student_id: UUID) -> Optiona
 
 
 def get_lesson_content(db: Session, lesson_id: UUID) -> Optional[LessonContentResponse]:
-    lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
-    if not lesson:
-        return None
-    content = db.query(LessonContent).filter(LessonContent.lesson_id == lesson_id).first()
+    # Single query with join
+    content = (
+        db.query(LessonContent)
+        .filter(LessonContent.lesson_id == lesson_id)
+        .first()
+    )
     if not content:
         return None
 
