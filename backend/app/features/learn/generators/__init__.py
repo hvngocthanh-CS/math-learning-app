@@ -67,3 +67,9 @@ try:
 except Exception as e:
     print(f"[ERROR] Failed to import grade4: {e}")
     import traceback; traceback.print_exc()
+try:
+    from app.features.learn.generators import grade5  # noqa: E402,F401
+    print(f"[INFO] Grade 5 imported OK. Registry now has {len(GENERATOR_REGISTRY)} generators.")
+except Exception as e:
+    print(f"[ERROR] Failed to import grade5: {e}")
+    import traceback; traceback.print_exc()

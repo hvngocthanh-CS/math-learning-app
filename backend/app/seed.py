@@ -19,6 +19,7 @@ from app.features.learn.seed_data.grade1 import GRADE1_CHAPTERS
 from app.features.learn.seed_data.grade2 import GRADE2_CHAPTERS
 from app.features.learn.seed_data.grade3 import GRADE3_CHAPTERS
 from app.features.learn.seed_data.grade4 import GRADE4_CHAPTERS
+from app.features.learn.seed_data.grade5 import GRADE5_CHAPTERS
 
 
 def _seed_grade(db, grade, chapters_data, grade_num):
@@ -174,8 +175,50 @@ def _update_content(db, chapters_data, grade_num):
                 ))
                 added_lessons += 1
 
+    # ── Remove lessons/chapters that no longer exist in seed data ──
+    removed_lessons = 0
+    removed_chapters = 0
+    seed_chapter_orders = {ch["order"] for ch in chapters_data}
+    seed_lesson_orders = {}  # {chapter_order: set of lesson orders}
+    for ch in chapters_data:
+        seed_lesson_orders[ch["order"]] = {ld["order"] for ld in ch["lessons"]}
+
+    all_chapters = db.query(Chapter).filter(Chapter.grade_id == grade.id).all()
+    for chapter in all_chapters:
+        if chapter.order not in seed_chapter_orders:
+            # Entire chapter removed from seed data
+            lessons = db.query(Lesson).filter(Lesson.chapter_id == chapter.id).all()
+            for lesson in lessons:
+                db.query(StudentProgress).filter(
+                    StudentProgress.lesson_id == lesson.id
+                ).delete(synchronize_session=False)
+                db.query(LessonContent).filter(
+                    LessonContent.lesson_id == lesson.id
+                ).delete(synchronize_session=False)
+                db.delete(lesson)
+                removed_lessons += 1
+            db.delete(chapter)
+            removed_chapters += 1
+        else:
+            # Chapter exists — check for removed lessons
+            valid_orders = seed_lesson_orders.get(chapter.order, set())
+            lessons = db.query(Lesson).filter(Lesson.chapter_id == chapter.id).all()
+            for lesson in lessons:
+                if lesson.order not in valid_orders:
+                    db.query(StudentProgress).filter(
+                        StudentProgress.lesson_id == lesson.id
+                    ).delete(synchronize_session=False)
+                    db.query(LessonContent).filter(
+                        LessonContent.lesson_id == lesson.id
+                    ).delete(synchronize_session=False)
+                    db.delete(lesson)
+                    removed_lessons += 1
+
     db.flush()
-    print(f"  Grade {grade_num}: updated {updated} lessons, added {added_chapters} chapters + {added_lessons} new lessons.")
+    removed_msg = ""
+    if removed_chapters or removed_lessons:
+        removed_msg = f", removed {removed_chapters} chapters + {removed_lessons} old lessons"
+    print(f"  Grade {grade_num}: updated {updated} lessons, added {added_chapters} chapters + {added_lessons} new lessons{removed_msg}.")
 
 
 def _reseed_grade(db, grade_num, chapters_data):
@@ -226,7 +269,7 @@ def seed(reset: bool = False, update: bool = False, reseed_grade: int = None):
     print("Creating tables (if not exist)...")
     Base.metadata.create_all(bind=engine)
 
-    grade_data = {1: GRADE1_CHAPTERS, 2: GRADE2_CHAPTERS, 3: GRADE3_CHAPTERS, 4: GRADE4_CHAPTERS}
+    grade_data = {1: GRADE1_CHAPTERS, 2: GRADE2_CHAPTERS, 3: GRADE3_CHAPTERS, 4: GRADE4_CHAPTERS, 5: GRADE5_CHAPTERS}
 
     db = SessionLocal()
     try:
