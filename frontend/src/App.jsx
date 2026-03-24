@@ -12,6 +12,8 @@ import { useAuth, Login, Register } from './features/auth'
 import { StudentDashboard } from './features/dashboard'
 import { GradeSelection, LessonList, LessonContent } from './features/learn'
 import { TeacherDashboard, ManageAccounts, MonitorStudents } from './features/teacher'
+import { GameSelection, MathPopGame, MathMemoryGame } from './features/play'
+import { Leaderboard } from './features/rank'
 
 function App() {
   const { user } = useAuth()
@@ -30,6 +32,10 @@ function App() {
           <Route path="grades" element={<GradeSelection />} />
           <Route path="grades/:gradeId" element={<LessonList />} />
           <Route path="lessons/:lessonId" element={<LessonContent />} />
+          <Route path="play" element={<GameSelection />} />
+          <Route path="play/math-pop" element={<MathPopGame />} />
+          <Route path="play/math-memory" element={<MathMemoryGame />} />
+          <Route path="rank" element={<Leaderboard />} />
         </Route>
 
         {/* Teacher */}
