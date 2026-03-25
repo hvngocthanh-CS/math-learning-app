@@ -32,6 +32,20 @@ class StudentProgress(Base):
     completed_at = Column(DateTime, nullable=True)
 
 
+class QuizAnswer(Base):
+    """Tracks individual question responses for each quiz attempt."""
+    __tablename__ = "quiz_answers"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    student_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    lesson_id = Column(UUID(as_uuid=True), ForeignKey("lessons.id"), nullable=False, index=True)
+    question_text = Column(String, nullable=False)
+    student_answer = Column(String, nullable=False)
+    correct_answer = Column(String, nullable=False)
+    is_correct = Column(Boolean, nullable=False)
+    attempted_at = Column(DateTime, default=datetime.utcnow)
+
+
 class DailyMission(Base):
     __tablename__ = "daily_missions"
 

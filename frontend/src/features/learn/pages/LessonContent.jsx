@@ -43,12 +43,13 @@ export default function LessonContent() {
     setActiveTab('quiz')
   }
 
-  const handleQuizComplete = async (quizScore) => {
+  const handleQuizComplete = async (quizScore, answers = []) => {
     const totalQuestions = 5
     try {
       const res = await api.post(`/lessons/${lessonId}/complete`, {
         quiz_score: quizScore,
         total_questions: totalQuestions,
+        answers: answers.length > 0 ? answers : undefined,
       })
       const data = res.data
       setCompletionData({

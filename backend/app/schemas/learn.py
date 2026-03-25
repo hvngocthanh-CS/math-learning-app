@@ -81,9 +81,17 @@ class LessonContentResponse(BaseModel):
         from_attributes = True
 
 
+class QuizAnswerInput(BaseModel):
+    question_text: str
+    student_answer: str
+    correct_answer: str
+    is_correct: bool
+
+
 class LessonCompleteRequest(BaseModel):
     quiz_score: int
     total_questions: int = 5
+    answers: Optional[List[QuizAnswerInput]] = None
 
 
 class LessonCompleteResponse(BaseModel):

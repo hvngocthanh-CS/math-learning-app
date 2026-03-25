@@ -7,15 +7,32 @@ from app.models.user import User
 from app.models.lesson import Lesson, Chapter
 from app.models.grade import Grade
 from app.models.progress import DailyMission, StudentProgress, ProgressStatus, MissionType
+from sqlalchemy import func
 from app.schemas.dashboard import (
     DashboardResponse, DailyMissionResponse,
-    RecommendedLesson, UserBriefDashboard,
+    RecommendedLesson, UserBriefDashboard, DashboardStats,
 )
 
 
 def get_dashboard(db: Session, user: User) -> DashboardResponse:
     missions = _get_or_create_daily_missions(db, user.id)
     recommended = _get_recommended_lessons(db, user.id)
+
+    lessons_completed = (
+        db.query(func.count(StudentProgress.id))
+        .filter(
+            StudentProgress.student_id == user.id,
+            StudentProgress.status == ProgressStatus.completed,
+        )
+        .scalar()
+    ) or 0
+
+    total_stars = (
+        db.query(func.coalesce(func.sum(StudentProgress.stars_earned), 0))
+        .filter(StudentProgress.student_id == user.id)
+        .scalar()
+    ) or 0
+
     return DashboardResponse(
         user=UserBriefDashboard(
             id=user.id, name=user.name, avatar_url=user.avatar_url,
@@ -24,6 +41,10 @@ def get_dashboard(db: Session, user: User) -> DashboardResponse:
         ),
         daily_missions=[DailyMissionResponse.model_validate(m) for m in missions],
         recommended_lessons=recommended,
+        stats=DashboardStats(
+            lessons_completed=lessons_completed,
+            total_stars=total_stars,
+        ),
     )
 
 

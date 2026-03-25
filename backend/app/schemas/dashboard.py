@@ -44,7 +44,13 @@ class RecommendedLesson(BaseModel):
         from_attributes = True
 
 
+class DashboardStats(BaseModel):
+    lessons_completed: int = 0
+    total_stars: int = 0
+
+
 class DashboardResponse(BaseModel):
     user: UserBriefDashboard
     daily_missions: List[DailyMissionResponse]
     recommended_lessons: List[RecommendedLesson]
+    stats: DashboardStats

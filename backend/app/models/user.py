@@ -1,8 +1,9 @@
 import uuid
 import enum
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, Enum, DateTime, Date
+from sqlalchemy import Column, String, Integer, Enum, DateTime, Date, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 
@@ -29,3 +30,7 @@ class User(Base):
     last_login_date = Column(Date, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Parent-child relationship: student.parent_id -> parent user
+    parent_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True, index=True)
+    parent = relationship("User", remote_side=[id], foreign_keys=[parent_id], backref="children")

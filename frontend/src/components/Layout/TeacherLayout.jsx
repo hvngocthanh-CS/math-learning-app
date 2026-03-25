@@ -1,11 +1,12 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FaHome, FaUsers, FaUserPlus, FaSignOutAlt } from 'react-icons/fa'
+import { FaHome, FaUsers, FaUserPlus, FaSignOutAlt, FaTrophy } from 'react-icons/fa'
 import { useAuth } from '../../features/auth'
 
 const sidebarItems = [
   { to: '/teacher', icon: FaHome, label: 'Dashboard', end: true },
   { to: '/teacher/students', icon: FaUsers, label: 'Students' },
+  { to: '/teacher/ranking', icon: FaTrophy, label: 'Ranking' },
   { to: '/teacher/accounts', icon: FaUserPlus, label: 'Accounts' },
 ]
 

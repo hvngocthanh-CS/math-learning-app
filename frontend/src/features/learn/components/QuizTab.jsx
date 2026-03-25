@@ -18,6 +18,7 @@ export default function QuizTab({ problems, onComplete }) {
   const [selected, setSelected] = useState(null)
   const [result, setResult] = useState(null) // 'correct' | 'wrong' | null
   const [score, setScore] = useState(0)
+  const [answersLog, setAnswersLog] = useState([])
   const timerRef = useRef(null)
 
   const total = problems?.length || 5
@@ -52,6 +53,16 @@ export default function QuizTab({ problems, onComplete }) {
       ? String(option).toLowerCase() === correctVal.toLowerCase()
       : Math.abs(parseFloat(option) - parseFloat(correctVal)) < 0.01
 
+    // Log the answer for tracking
+    const answerEntry = {
+      question_text: problem.question_text || `Question ${current + 1}`,
+      student_answer: String(option),
+      correct_answer: String(correctVal),
+      is_correct: isCorrect,
+    }
+    const updatedAnswers = [...answersLog, answerEntry]
+    setAnswersLog(updatedAnswers)
+
     if (isCorrect) {
       setResult('correct')
       const newScore = score + 1
@@ -64,7 +75,7 @@ export default function QuizTab({ problems, onComplete }) {
           setSelected(null)
           setResult(null)
         } else {
-          onComplete(newScore)
+          onComplete(newScore, updatedAnswers)
         }
       }, 1500)
     } else {
@@ -77,7 +88,7 @@ export default function QuizTab({ problems, onComplete }) {
           setSelected(null)
           setResult(null)
         } else {
-          onComplete(score)
+          onComplete(score, updatedAnswers)
         }
       }, 1500)
     }

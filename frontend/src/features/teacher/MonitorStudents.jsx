@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FaUsers, FaChartBar, FaTrophy, FaExclamationTriangle, FaSpinner, FaStar, FaCoins, FaFire } from 'react-icons/fa'
+import {
+  FaUsers, FaChartBar, FaTrophy, FaExclamationTriangle, FaSpinner,
+  FaStar, FaCoins, FaFire, FaCheckCircle, FaTimesCircle, FaSearch,
+} from 'react-icons/fa'
 import toast from 'react-hot-toast'
 import api from '../../utils/api'
 
 const container = {
   hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.06 },
-  },
+  show: { opacity: 1, transition: { staggerChildren: 0.06 } },
 }
-
 const item = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0 },
@@ -27,10 +27,6 @@ const avatarGradients = [
   'from-red-400 to-pink-400',
   'from-indigo-400 to-blue-400',
 ]
-
-function getAvatarGradient(index) {
-  return avatarGradients[index % avatarGradients.length]
-}
 
 function daysSince(dateStr) {
   if (!dateStr) return null
@@ -49,15 +45,14 @@ function formatLastLogin(dateStr) {
 export default function MonitorStudents() {
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
-  const [expandedId, setExpandedId] = useState(null)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     const fetchStudents = async () => {
       setLoading(true)
       try {
-        const response = await api.get('/users?role=student')
-        const data = response.data
-        setStudents(Array.isArray(data) ? data : data.users || [])
+        const response = await api.get('/teacher/students')
+        setStudents(response.data)
       } catch (err) {
         toast.error('Failed to load students')
         console.error(err)
@@ -68,48 +63,39 @@ export default function MonitorStudents() {
     fetchStudents()
   }, [])
 
+  const filteredStudents = students.filter((s) =>
+    s.name.toLowerCase().includes(search.toLowerCase()) ||
+    s.email.toLowerCase().includes(search.toLowerCase())
+  )
+
   // Computed summary stats
   const totalStudents = students.length
-  const averageLevel = totalStudents > 0
-    ? (students.reduce((sum, s) => sum + (s.level || 0), 0) / totalStudents).toFixed(1)
+  const averageScore = totalStudents > 0
+    ? (students.reduce((sum, s) => sum + (s.average_score || 0), 0) / totalStudents).toFixed(1)
     : 0
   const topPerformer = students.length > 0
     ? students.reduce((top, s) => (s.stars || 0) > (top.stars || 0) ? s : top, students[0])
     : null
-  const inactiveStudents = students.filter((s) => {
-    const days = daysSince(s.lastLogin || s.last_login)
+  const inactiveCount = students.filter((s) => {
+    const days = daysSince(s.last_login_date)
     return days === null || days > 3
-  })
+  }).length
 
   const summaryCards = [
-    {
-      title: 'Total Students',
-      value: totalStudents,
-      icon: FaUsers,
-      color: 'text-blue-600',
-      bg: 'bg-blue-50',
-    },
-    {
-      title: 'Average Level',
-      value: averageLevel,
-      icon: FaChartBar,
-      color: 'text-green-600',
-      bg: 'bg-green-50',
-    },
+    { title: 'Total Students', value: totalStudents, icon: FaUsers, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { title: 'Average Score', value: `${averageScore}%`, icon: FaChartBar, color: 'text-green-600', bg: 'bg-green-50' },
     {
       title: 'Top Performer',
       value: topPerformer?.name?.split(' ')[0] || '-',
       subtitle: topPerformer ? `${topPerformer.stars || 0} stars` : '',
-      icon: FaTrophy,
-      color: 'text-orange-600',
-      bg: 'bg-orange-50',
+      icon: FaTrophy, color: 'text-orange-600', bg: 'bg-orange-50',
     },
     {
       title: 'Inactive (>3 days)',
-      value: inactiveStudents.length,
+      value: inactiveCount,
       icon: FaExclamationTriangle,
-      color: inactiveStudents.length > 0 ? 'text-red-600' : 'text-green-600',
-      bg: inactiveStudents.length > 0 ? 'bg-red-50' : 'bg-green-50',
+      color: inactiveCount > 0 ? 'text-red-600' : 'text-green-600',
+      bg: inactiveCount > 0 ? 'bg-red-50' : 'bg-green-50',
     },
   ]
 
@@ -132,7 +118,7 @@ export default function MonitorStudents() {
       {/* Page Header */}
       <motion.div variants={item}>
         <h1 className="text-3xl font-extrabold text-gray-800">Monitor Students</h1>
-        <p className="text-gray-500 mt-1">Track student progress, levels, and engagement.</p>
+        <p className="text-gray-500 mt-1">Track student progress, scores, and performance.</p>
       </motion.div>
 
       {/* Summary Stats */}
@@ -158,8 +144,22 @@ export default function MonitorStudents() {
         ))}
       </motion.div>
 
+      {/* Search */}
+      <motion.div variants={item}>
+        <div className="relative">
+          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
+          <input
+            type="text"
+            placeholder="Search students by name or email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none transition-all text-sm font-medium"
+          />
+        </div>
+      </motion.div>
+
       {/* Student Cards Grid */}
-      {students.length === 0 ? (
+      {filteredStudents.length === 0 ? (
         <motion.div variants={item} className="text-center py-20">
           <div className="text-6xl mb-4">📚</div>
           <p className="text-gray-400 font-bold text-lg">No students found</p>
@@ -170,36 +170,33 @@ export default function MonitorStudents() {
           variants={item}
           className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"
         >
-          {students.map((student, index) => {
-            const isExpanded = expandedId === (student._id || student.id)
-            const lastLoginStr = student.lastLogin || student.last_login
+          {filteredStudents.map((student, index) => {
+            const lastLoginStr = student.last_login_date
             const inactive = daysSince(lastLoginStr) === null || daysSince(lastLoginStr) > 3
-            const xp = student.xp || 0
-            const xpMax = student.xpMax || student.xp_max || 1000
-            const xpPercent = Math.min(100, Math.round((xp / xpMax) * 100))
+            const xpPercent = Math.min(100, Math.round(((student.xp || 0) % 500) / 5))
 
             return (
               <motion.div
-                key={student._id || student.id || index}
+                key={student.id}
                 variants={item}
                 whileHover={{ y: -4 }}
-                layout
                 className={`bg-white rounded-2xl shadow-md border overflow-hidden transition-all ${
                   inactive ? 'border-red-200' : 'border-gray-100'
                 }`}
               >
-                {/* Inactive Warning Banner */}
                 {inactive && (
                   <div className="bg-red-50 px-4 py-1.5 flex items-center gap-2">
                     <FaExclamationTriangle className="text-red-400 text-xs" />
-                    <span className="text-xs font-bold text-red-500">Inactive for {daysSince(lastLoginStr) ?? 'N/A'} days</span>
+                    <span className="text-xs font-bold text-red-500">
+                      Inactive for {daysSince(lastLoginStr) ?? 'N/A'} days
+                    </span>
                   </div>
                 )}
 
                 <div className="p-5">
                   {/* Top row: avatar + name */}
                   <div className="flex items-center gap-4 mb-4">
-                    <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${getAvatarGradient(index)} flex items-center justify-center text-white font-extrabold text-xl shadow-lg flex-shrink-0`}>
+                    <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${avatarGradients[index % avatarGradients.length]} flex items-center justify-center text-white font-extrabold text-xl shadow-lg flex-shrink-0`}>
                       {(student.name || '?')[0].toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -211,12 +208,8 @@ export default function MonitorStudents() {
                   {/* Level + XP bar */}
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm font-bold text-gray-600">
-                        Level {student.level || 1}
-                      </span>
-                      <span className="text-xs font-semibold text-gray-400">
-                        {xp} / {xpMax} XP
-                      </span>
+                      <span className="text-sm font-bold text-gray-600">Level {student.level || 1}</span>
+                      <span className="text-xs font-semibold text-gray-400">{student.xp || 0} XP</span>
                     </div>
                     <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
                       <motion.div
@@ -235,10 +228,27 @@ export default function MonitorStudents() {
                       <div className="text-sm font-extrabold text-gray-700">{student.stars || 0}</div>
                       <div className="text-[10px] font-semibold text-gray-400">Stars</div>
                     </div>
-                    <div className="bg-amber-50 rounded-xl p-2.5 text-center">
-                      <FaCoins className="text-amber-500 mx-auto mb-1" />
-                      <div className="text-sm font-extrabold text-gray-700">{student.coins || 0}</div>
-                      <div className="text-[10px] font-semibold text-gray-400">Coins</div>
+                    <div className="bg-green-50 rounded-xl p-2.5 text-center">
+                      <FaCheckCircle className="text-green-500 mx-auto mb-1" />
+                      <div className="text-sm font-extrabold text-gray-700">{student.total_correct || 0}</div>
+                      <div className="text-[10px] font-semibold text-gray-400">Correct</div>
+                    </div>
+                    <div className="bg-red-50 rounded-xl p-2.5 text-center">
+                      <FaTimesCircle className="text-red-400 mx-auto mb-1" />
+                      <div className="text-sm font-extrabold text-gray-700">{student.total_incorrect || 0}</div>
+                      <div className="text-[10px] font-semibold text-gray-400">Incorrect</div>
+                    </div>
+                  </div>
+
+                  {/* Progress summary */}
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    <div className="bg-blue-50 rounded-xl p-2.5 text-center">
+                      <div className="text-sm font-extrabold text-blue-600">{student.lessons_completed || 0}</div>
+                      <div className="text-[10px] font-semibold text-gray-400">Lessons</div>
+                    </div>
+                    <div className="bg-purple-50 rounded-xl p-2.5 text-center">
+                      <div className="text-sm font-extrabold text-purple-600">{student.average_score || 0}%</div>
+                      <div className="text-[10px] font-semibold text-gray-400">Avg Score</div>
                     </div>
                     <div className="bg-orange-50 rounded-xl p-2.5 text-center">
                       <FaFire className="text-orange-500 mx-auto mb-1" />
@@ -247,66 +257,29 @@ export default function MonitorStudents() {
                     </div>
                   </div>
 
-                  {/* Last login */}
+                  {/* Footer */}
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-gray-400 font-semibold">
                       Last login: {formatLastLogin(lastLoginStr)}
                     </span>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() =>
-                        setExpandedId(isExpanded ? null : student._id || student.id)
-                      }
-                      className="text-xs font-bold text-orange-500 hover:text-orange-600 transition-colors"
-                    >
-                      {isExpanded ? 'Hide Details' : 'View Details'}
-                    </motion.button>
+                    <Link to={`/teacher/students/${student.id}`}>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="text-xs font-bold text-orange-500 hover:text-orange-600 transition-colors"
+                      >
+                        View Details &rarr;
+                      </motion.button>
+                    </Link>
                   </div>
 
-                  {/* Expanded Details */}
-                  {isExpanded && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-4 pt-4 border-t border-gray-100"
-                    >
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-400 font-semibold">Email</span>
-                          <span className="text-gray-700 font-medium">{student.email}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400 font-semibold">Grade</span>
-                          <span className="text-gray-700 font-medium">{student.grade || '-'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400 font-semibold">Lessons Completed</span>
-                          <span className="text-gray-700 font-medium">{student.lessonsCompleted || student.lessons_completed || 0}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400 font-semibold">Quizzes Taken</span>
-                          <span className="text-gray-700 font-medium">{student.quizzesTaken || student.quizzes_taken || 0}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400 font-semibold">Average Score</span>
-                          <span className="text-gray-700 font-medium">{student.averageScore || student.average_score || '-'}%</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400 font-semibold">Joined</span>
-                          <span className="text-gray-700 font-medium">
-                            {student.createdAt || student.created_at
-                              ? new Date(student.createdAt || student.created_at).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric',
-                                })
-                              : '-'}
-                          </span>
-                        </div>
-                      </div>
-                    </motion.div>
+                  {/* Parent info */}
+                  {student.parent_name && (
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <span className="text-xs text-gray-400">
+                        Parent: <span className="font-semibold text-gray-600">{student.parent_name}</span>
+                      </span>
+                    </div>
                   )}
                 </div>
               </motion.div>

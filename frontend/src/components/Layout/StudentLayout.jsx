@@ -20,6 +20,45 @@ const mockStats = {
   coins: 1280,
 }
 
+const decoItems = [
+  // Row 1
+  { emoji: '🌈', top: '5%', left: '8%', size: '1.6rem', delay: '0s' },
+  { emoji: '⭐', top: '3%', left: '25%', size: '1.2rem', delay: '0.5s' },
+  { emoji: '🐱', top: '8%', left: '45%', size: '1.4rem', delay: '1s' },
+  { emoji: '🌟', top: '4%', left: '65%', size: '1.3rem', delay: '1.5s' },
+  { emoji: '🌈', top: '7%', left: '82%', size: '1.5rem', delay: '0.3s' },
+  // Row 2
+  { emoji: '🐰', top: '18%', left: '12%', size: '1.4rem', delay: '2s' },
+  { emoji: '✨', top: '22%', left: '35%', size: '1.1rem', delay: '0.8s' },
+  { emoji: '🌸', top: '20%', left: '55%', size: '1.3rem', delay: '1.2s' },
+  { emoji: '🐣', top: '16%', left: '75%', size: '1.4rem', delay: '0.6s' },
+  { emoji: '💫', top: '24%', left: '92%', size: '1.2rem', delay: '1.8s' },
+  // Row 3
+  { emoji: '🌻', top: '35%', left: '5%', size: '1.5rem', delay: '1.3s' },
+  { emoji: '🐧', top: '38%', left: '22%', size: '1.3rem', delay: '0.4s' },
+  { emoji: '⭐', top: '33%', left: '42%', size: '1.1rem', delay: '2.2s' },
+  { emoji: '🌈', top: '40%', left: '60%', size: '1.5rem', delay: '0.9s' },
+  { emoji: '🐶', top: '36%', left: '78%', size: '1.4rem', delay: '1.6s' },
+  // Row 4
+  { emoji: '✨', top: '50%', left: '10%', size: '1.2rem', delay: '0.7s' },
+  { emoji: '🦊', top: '55%', left: '30%', size: '1.4rem', delay: '1.1s' },
+  { emoji: '🌟', top: '52%', left: '50%', size: '1.3rem', delay: '2.5s' },
+  { emoji: '🐻', top: '48%', left: '70%', size: '1.4rem', delay: '0.2s' },
+  { emoji: '🌸', top: '53%', left: '88%', size: '1.3rem', delay: '1.4s' },
+  // Row 5
+  { emoji: '🐱', top: '65%', left: '6%', size: '1.3rem', delay: '1.7s' },
+  { emoji: '💫', top: '68%', left: '25%', size: '1.1rem', delay: '0.5s' },
+  { emoji: '🌈', top: '62%', left: '45%', size: '1.5rem', delay: '2.1s' },
+  { emoji: '⭐', top: '70%', left: '65%', size: '1.2rem', delay: '0.8s' },
+  { emoji: '🌈', top: '66%', left: '85%', size: '1.5rem', delay: '1.9s' },
+  // Row 6
+  { emoji: '🐰', top: '80%', left: '15%', size: '1.4rem', delay: '1.0s' },
+  { emoji: '🌻', top: '82%', left: '38%', size: '1.3rem', delay: '2.3s' },
+  { emoji: '✨', top: '78%', left: '55%', size: '1.1rem', delay: '0.3s' },
+  { emoji: '🐣', top: '85%', left: '72%', size: '1.4rem', delay: '1.5s' },
+  { emoji: '🌟', top: '83%', left: '90%', size: '1.2rem', delay: '0.6s' },
+]
+
 export default function StudentLayout() {
   const { user, logout } = useAuth()
   const location = useLocation()
@@ -27,9 +66,25 @@ export default function StudentLayout() {
   const xpPercent = Math.round((stats.xp / stats.xpMax) * 100)
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-app flex">
+      {/* Cute floating decorations */}
+      <div className="bg-deco" aria-hidden="true">
+        {decoItems.map((item, i) => (
+          <span
+            key={i}
+            className="bg-deco-item"
+            style={{
+              top: item.top,
+              left: item.left,
+              animationDelay: item.delay,
+            }}
+          >
+            {item.emoji}
+          </span>
+        ))}
+      </div>
       {/* Left Sidebar */}
-      <aside className="fixed left-0 top-0 bottom-0 w-20 bg-white shadow-lg z-40 flex flex-col items-center py-6 border-r border-gray-100">
+      <aside className="fixed left-0 top-0 bottom-0 w-20 bg-gradient-to-b from-white via-purple-50/40 to-blue-50/40 shadow-lg z-40 flex flex-col items-center py-6 border-r border-purple-100/50">
         {/* Logo */}
         <div className="text-3xl mb-8 cursor-pointer hover:scale-110 transition-transform">
           🦉
@@ -84,7 +139,7 @@ export default function StudentLayout() {
       {/* Main Area */}
       <div className="flex-1 ml-20">
         {/* Top Bar */}
-        <header className="fixed top-0 left-20 right-0 h-16 bg-white shadow-sm z-30 flex items-center px-6 border-b border-gray-100">
+        <header className="fixed top-0 left-20 right-0 h-16 bg-white/80 backdrop-blur-md shadow-sm z-30 flex items-center px-6 border-b border-purple-100/40">
           {/* Left: Logo text */}
           <div className="flex items-center gap-2 mr-8">
             <span className="text-2xl">🦉</span>
@@ -162,7 +217,7 @@ export default function StudentLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="pt-20 pb-8 px-6">
+        <main className="pt-20 pb-8 px-6 relative z-10">
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, y: 10 }}

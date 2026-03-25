@@ -11,7 +11,11 @@ import Landing from './pages/Landing'
 import { useAuth, Login, Register } from './features/auth'
 import { StudentDashboard } from './features/dashboard'
 import { GradeSelection, LessonList, LessonContent } from './features/learn'
-import { TeacherDashboard, ManageAccounts, MonitorStudents } from './features/teacher'
+import { TeacherDashboard, ManageAccounts, MonitorStudents, StudentDetail, TeacherRanking } from './features/teacher'
+import { GameSelection, MathPopGame, MathMemoryGame } from './features/play'
+import { Leaderboard } from './features/rank'
+import { ParentDashboard } from './features/parent'
+import ParentLayout from './components/Layout/ParentLayout'
 
 function App() {
   const { user } = useAuth()
@@ -30,6 +34,10 @@ function App() {
           <Route path="grades" element={<GradeSelection />} />
           <Route path="grades/:gradeId" element={<LessonList />} />
           <Route path="lessons/:lessonId" element={<LessonContent />} />
+          <Route path="play" element={<GameSelection />} />
+          <Route path="play/math-pop" element={<MathPopGame />} />
+          <Route path="play/math-memory" element={<MathMemoryGame />} />
+          <Route path="rank" element={<Leaderboard />} />
         </Route>
 
         {/* Teacher */}
@@ -37,20 +45,14 @@ function App() {
           <Route index element={<TeacherDashboard />} />
           <Route path="accounts" element={<ManageAccounts />} />
           <Route path="students" element={<MonitorStudents />} />
+          <Route path="students/:studentId" element={<StudentDetail />} />
+          <Route path="ranking" element={<TeacherRanking />} />
         </Route>
 
-        {/* Parent (placeholder) */}
-        <Route path="/parent" element={
-          <ProtectedRoute role="parent">
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-              <div className="text-center">
-                <div className="text-6xl mb-4">👨‍👩‍👧‍👦</div>
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">Parent Dashboard</h1>
-                <p className="text-gray-500">Coming soon!</p>
-              </div>
-            </div>
-          </ProtectedRoute>
-        } />
+        {/* Parent */}
+        <Route path="/parent" element={<ProtectedRoute role="parent"><ParentLayout /></ProtectedRoute>}>
+          <Route index element={<ParentDashboard />} />
+        </Route>
 
         {/* 404 */}
         <Route path="*" element={

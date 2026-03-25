@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.grade import Grade
 from app.models.lesson import Chapter, Lesson, LessonContent
-from app.models.progress import StudentProgress, ProgressStatus
+from app.models.progress import StudentProgress, ProgressStatus, QuizAnswer
 from app.models.user import User
 from app.schemas.learn import (
     GradeResponse,
@@ -248,7 +248,7 @@ def get_lesson_content(db: Session, lesson_id: UUID) -> Optional[LessonContentRe
 
 # ─── Lesson completion & progression ────────────────────────────
 
-def complete_lesson(db: Session, lesson_id: UUID, quiz_score: int, total_questions: int, user: User) -> Optional[LessonCompleteResponse]:
+def complete_lesson(db: Session, lesson_id: UUID, quiz_score: int, total_questions: int, user: User, answers=None) -> Optional[LessonCompleteResponse]:
     lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
     if not lesson:
         return None
@@ -285,6 +285,20 @@ def complete_lesson(db: Session, lesson_id: UUID, quiz_score: int, total_questio
             completed_at=datetime.utcnow() if stars > 0 else None,
         )
         db.add(progress)
+
+    # Save per-question answers if provided
+    if answers:
+        now = datetime.utcnow()
+        for ans in answers:
+            db.add(QuizAnswer(
+                student_id=user.id,
+                lesson_id=lesson.id,
+                question_text=ans.question_text,
+                student_answer=ans.student_answer,
+                correct_answer=ans.correct_answer,
+                is_correct=ans.is_correct,
+                attempted_at=now,
+            ))
 
     # Update user stats
     user.xp = (user.xp or 0) + xp_earned
