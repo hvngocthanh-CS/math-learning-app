@@ -10,60 +10,58 @@ const sidebarItems = [
   { to: '/student/rank', icon: FaTrophy, label: 'Rank', matchPaths: ['/student/rank'] },
 ]
 
-// Mock user stats (replace with real API data)
-const mockStats = {
-  level: 12,
-  xp: 2340,
-  xpMax: 3000,
-  streak: 7,
-  stars: 456,
-  coins: 1280,
-}
 
 const decoItems = [
   // Row 1
-  { emoji: '🌈', top: '5%', left: '8%', size: '1.6rem', delay: '0s' },
-  { emoji: '⭐', top: '3%', left: '25%', size: '1.2rem', delay: '0.5s' },
-  { emoji: '🐱', top: '8%', left: '45%', size: '1.4rem', delay: '1s' },
-  { emoji: '🌟', top: '4%', left: '65%', size: '1.3rem', delay: '1.5s' },
-  { emoji: '🌈', top: '7%', left: '82%', size: '1.5rem', delay: '0.3s' },
+  { emoji: '🌈', top: '5%', left: '8%', delay: '0s' },
+  { emoji: '⭐', top: '3%', left: '25%', delay: '0.5s' },
+  { emoji: '🐱', top: '8%', left: '45%', delay: '1s' },
+  { emoji: '🌟', top: '4%', left: '65%', delay: '1.5s' },
+  { emoji: '🌈', top: '7%', left: '82%', delay: '0.3s' },
   // Row 2
-  { emoji: '🐰', top: '18%', left: '12%', size: '1.4rem', delay: '2s' },
-  { emoji: '✨', top: '22%', left: '35%', size: '1.1rem', delay: '0.8s' },
-  { emoji: '🌸', top: '20%', left: '55%', size: '1.3rem', delay: '1.2s' },
-  { emoji: '🐣', top: '16%', left: '75%', size: '1.4rem', delay: '0.6s' },
-  { emoji: '💫', top: '24%', left: '92%', size: '1.2rem', delay: '1.8s' },
+  { emoji: '🐰', top: '18%', left: '12%', delay: '2s' },
+  { emoji: '✨', top: '22%', left: '35%', delay: '0.8s' },
+  { emoji: '🌸', top: '20%', left: '55%', delay: '1.2s' },
+  { emoji: '🐣', top: '16%', left: '75%', delay: '0.6s' },
+  { emoji: '💫', top: '24%', left: '92%', delay: '1.8s' },
   // Row 3
-  { emoji: '🌻', top: '35%', left: '5%', size: '1.5rem', delay: '1.3s' },
-  { emoji: '🐧', top: '38%', left: '22%', size: '1.3rem', delay: '0.4s' },
-  { emoji: '⭐', top: '33%', left: '42%', size: '1.1rem', delay: '2.2s' },
-  { emoji: '🌈', top: '40%', left: '60%', size: '1.5rem', delay: '0.9s' },
-  { emoji: '🐶', top: '36%', left: '78%', size: '1.4rem', delay: '1.6s' },
+  { emoji: '🌻', top: '35%', left: '5%', delay: '1.3s' },
+  { emoji: '🐧', top: '38%', left: '22%', delay: '0.4s' },
+  { emoji: '⭐', top: '33%', left: '42%', delay: '2.2s' },
+  { emoji: '🌈', top: '40%', left: '60%', delay: '0.9s' },
+  { emoji: '🐶', top: '36%', left: '78%', delay: '1.6s' },
   // Row 4
-  { emoji: '✨', top: '50%', left: '10%', size: '1.2rem', delay: '0.7s' },
-  { emoji: '🦊', top: '55%', left: '30%', size: '1.4rem', delay: '1.1s' },
-  { emoji: '🌟', top: '52%', left: '50%', size: '1.3rem', delay: '2.5s' },
-  { emoji: '🐻', top: '48%', left: '70%', size: '1.4rem', delay: '0.2s' },
-  { emoji: '🌸', top: '53%', left: '88%', size: '1.3rem', delay: '1.4s' },
+  { emoji: '✨', top: '50%', left: '10%', delay: '0.7s' },
+  { emoji: '🦊', top: '55%', left: '30%', delay: '1.1s' },
+  { emoji: '🌟', top: '52%', left: '50%', delay: '2.5s' },
+  { emoji: '🐻', top: '48%', left: '70%', delay: '0.2s' },
+  { emoji: '🌸', top: '53%', left: '88%', delay: '1.4s' },
   // Row 5
-  { emoji: '🐱', top: '65%', left: '6%', size: '1.3rem', delay: '1.7s' },
-  { emoji: '💫', top: '68%', left: '25%', size: '1.1rem', delay: '0.5s' },
-  { emoji: '🌈', top: '62%', left: '45%', size: '1.5rem', delay: '2.1s' },
-  { emoji: '⭐', top: '70%', left: '65%', size: '1.2rem', delay: '0.8s' },
-  { emoji: '🌈', top: '66%', left: '85%', size: '1.5rem', delay: '1.9s' },
+  { emoji: '🐱', top: '65%', left: '6%', delay: '1.7s' },
+  { emoji: '💫', top: '68%', left: '25%', delay: '0.5s' },
+  { emoji: '🌈', top: '62%', left: '45%', delay: '2.1s' },
+  { emoji: '⭐', top: '70%', left: '65%', delay: '0.8s' },
+  { emoji: '🌈', top: '66%', left: '85%', delay: '1.9s' },
   // Row 6
-  { emoji: '🐰', top: '80%', left: '15%', size: '1.4rem', delay: '1.0s' },
-  { emoji: '🌻', top: '82%', left: '38%', size: '1.3rem', delay: '2.3s' },
-  { emoji: '✨', top: '78%', left: '55%', size: '1.1rem', delay: '0.3s' },
-  { emoji: '🐣', top: '85%', left: '72%', size: '1.4rem', delay: '1.5s' },
-  { emoji: '🌟', top: '83%', left: '90%', size: '1.2rem', delay: '0.6s' },
+  { emoji: '🐰', top: '80%', left: '15%', delay: '1.0s' },
+  { emoji: '🌻', top: '82%', left: '38%', delay: '2.3s' },
+  { emoji: '✨', top: '78%', left: '55%', delay: '0.3s' },
+  { emoji: '🐣', top: '85%', left: '72%', delay: '1.5s' },
+  { emoji: '🌟', top: '83%', left: '90%', delay: '0.6s' },
 ]
 
 export default function StudentLayout() {
   const { user, logout } = useAuth()
   const location = useLocation()
-  const stats = mockStats
-  const xpPercent = Math.round((stats.xp / stats.xpMax) * 100)
+  const stats = {
+    level: user?.level || 1,
+    xp: user?.xp || 0,
+    xpMax: ((user?.level || 1)) * 500,
+    streak: user?.streak || 0,
+    stars: user?.stars || 0,
+    coins: user?.coins || 0,
+  }
+  const xpPercent = stats.xpMax > 0 ? Math.round(((stats.xp % 500) / 500) * 100) : 0
 
   return (
     <div className="min-h-screen bg-app flex">
@@ -84,14 +82,14 @@ export default function StudentLayout() {
         ))}
       </div>
       {/* Left Sidebar */}
-      <aside className="fixed left-0 top-0 bottom-0 w-20 bg-gradient-to-b from-white via-purple-50/40 to-blue-50/40 shadow-lg z-40 flex flex-col items-center py-6 border-r border-purple-100/50">
+      <aside className="fixed left-0 top-0 bottom-0 w-24 bg-gradient-to-b from-white via-purple-50/40 to-blue-50/40 shadow-lg z-40 flex flex-col items-center py-6 border-r border-purple-100/50">
         {/* Logo */}
-        <div className="text-3xl mb-8 cursor-pointer hover:scale-110 transition-transform">
+        <div className="text-4xl mb-8 cursor-pointer hover:scale-110 transition-transform">
           🦉
         </div>
 
         {/* Nav Items */}
-        <nav className="flex-1 flex flex-col items-center gap-2">
+        <nav className="flex-1 flex flex-col items-center gap-3">
           {sidebarItems.map((item) => {
             const active = item.end
               ? location.pathname === item.to
@@ -107,15 +105,15 @@ export default function StudentLayout() {
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                     className={`
-                      w-16 h-16 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200
+                      w-[4.5rem] h-[4.5rem] rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200
                       ${active
                         ? 'bg-gradient-to-br from-purple-500 to-blue-500 text-white shadow-lg shadow-purple-300 ring-2 ring-purple-300'
                         : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
                       }
                     `}
                   >
-                    <item.icon className="text-xl" />
-                    <span className="text-[11px] font-bold">{item.label}</span>
+                    <item.icon className="text-2xl" />
+                    <span className="text-xs font-extrabold">{item.label}</span>
                   </motion.div>
                 )}
               </NavLink>
@@ -128,18 +126,18 @@ export default function StudentLayout() {
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
           onClick={logout}
-          className="w-16 h-16 rounded-2xl flex flex-col items-center justify-center gap-1 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all"
+          className="w-[4.5rem] h-[4.5rem] rounded-2xl flex flex-col items-center justify-center gap-1 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all"
           title="Logout"
         >
-          <span className="text-lg">🚪</span>
-          <span className="text-[10px] font-bold">Exit</span>
+          <span className="text-2xl">🚪</span>
+          <span className="text-xs font-extrabold">Exit</span>
         </motion.button>
       </aside>
 
       {/* Main Area */}
-      <div className="flex-1 ml-20">
+      <div className="flex-1 ml-24">
         {/* Top Bar */}
-        <header className="fixed top-0 left-20 right-0 h-16 bg-white/80 backdrop-blur-md shadow-sm z-30 flex items-center px-6 border-b border-purple-100/40">
+        <header className="fixed top-0 left-24 right-0 h-16 bg-white/80 backdrop-blur-md shadow-sm z-30 flex items-center px-6 border-b border-purple-100/40">
           {/* Left: Logo text */}
           <div className="flex items-center gap-2 mr-8">
             <span className="text-2xl">🦉</span>

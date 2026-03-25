@@ -129,9 +129,5 @@ def delete_user(user_id: str, db: Session = Depends(get_db), user: User = Depend
     if found.role == UserRole.parent:
         db.query(User).filter(User.parent_id == uid).update({"parent_id": None})
 
-    # If deleting a student, clear parent_id reference
-    if found.role == UserRole.student and found.parent_id:
-        pass  # no action needed, just delete the student
-
     db.delete(found)
     db.commit()

@@ -38,7 +38,6 @@ class LeaderboardEntry(BaseModel):
     lessons_completed: int
     ranking_score: int
     is_current_user: bool = False
-    grade_name: Optional[str] = None
 
     class Config:
         from_attributes = True

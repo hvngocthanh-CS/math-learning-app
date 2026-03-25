@@ -200,7 +200,7 @@ function TopCard({ entry, place }) {
 }
 
 /* ── Top 10 Row ── */
-function RankRow({ entry, index }) {
+function RankRow({ entry }) {
   const stripeColor = entry.rank === 1
     ? 'border-l-yellow-400'
     : entry.rank === 2
@@ -409,8 +409,8 @@ export default function Leaderboard() {
           </div>
 
           <div className="space-y-2">
-            {restList.map((entry, index) => (
-              <RankRow key={entry.student_id} entry={entry} index={index} />
+            {restList.map((entry) => (
+              <RankRow key={entry.student_id} entry={entry} />
             ))}
           </div>
         </motion.div>
@@ -420,7 +420,7 @@ export default function Leaderboard() {
       {current_user_rank && current_user_rank.rank > 10 && (
         <motion.div variants={item} className="mt-4">
           <div className="text-center text-xs text-gray-400 my-2">• • •</div>
-          <RankRow entry={current_user_rank} index={0} />
+          <RankRow entry={current_user_rank} />
         </motion.div>
       )}
 

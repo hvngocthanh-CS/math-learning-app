@@ -56,7 +56,6 @@ export default function MathPopGame() {
   const [total, setTotal] = useState(0)
   const [flash, setFlash] = useState(null) // 'correct' | 'wrong' | null
   const [floatDuration, setFloatDuration] = useState(5)
-  const containerRef = useRef(null)
   const missTimerRef = useRef(null)
 
   const nextQuestion = useCallback(() => {
@@ -144,10 +143,14 @@ export default function MathPopGame() {
         const newLives = l - 1
         if (newLives <= 0) {
           setTimeout(() => setPhase('gameover'), 400)
+        } else {
+          setTimeout(() => {
+            setFlash(null)
+            nextQuestion()
+          }, 400)
         }
         return newLives
       })
-      setTimeout(() => setFlash(null), 400)
     }
   }
 
@@ -300,7 +303,6 @@ export default function MathPopGame() {
 
       {/* Bubble area */}
       <div
-        ref={containerRef}
         className="relative rounded-3xl overflow-hidden bg-gradient-to-b from-blue-50 via-purple-50 to-pink-50 border border-gray-100 shadow-inner"
         style={{ height: '380px' }}
       >
