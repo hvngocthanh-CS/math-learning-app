@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.database import engine, Base
-from app.api.v1 import auth, learn, dashboard, users, progress, leaderboard
+from app.api.v1 import auth, learn, dashboard, users, progress, leaderboard, teacher, parent
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -29,6 +29,8 @@ app.include_router(users.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")
 app.include_router(progress.router, prefix="/api/v1")
 app.include_router(leaderboard.router, prefix="/api/v1")
+app.include_router(teacher.router, prefix="/api/v1")
+app.include_router(parent.router, prefix="/api/v1")
 
 
 @app.get("/")

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 from datetime import datetime, date
 from app.models.user import UserRole
@@ -11,6 +11,8 @@ class UserCreate(BaseModel):
     password: str = Field(..., min_length=6)
     role: UserRole = UserRole.student
     teacher_code: Optional[str] = None
+    student_ids: Optional[List[UUID]] = None  # When creating parent, link to these students
+    parent_id: Optional[UUID] = None  # When creating student, link to this parent
 
 
 class UserLogin(BaseModel):
@@ -32,6 +34,7 @@ class UserResponse(BaseModel):
     last_login_date: Optional[date] = None
     created_at: datetime
     updated_at: datetime
+    parent_id: Optional[UUID] = None
 
     class Config:
         from_attributes = True

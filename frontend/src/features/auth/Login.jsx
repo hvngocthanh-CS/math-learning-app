@@ -9,7 +9,6 @@ export default function Login() {
   const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {
@@ -157,17 +156,8 @@ export default function Login() {
                 />
               </div>
 
-              {/* Remember Me & Forgot */}
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 accent-primary-500 rounded cursor-pointer"
-                  />
-                  <span className="text-sm text-gray-600 font-semibold">Remember me</span>
-                </label>
+              {/* Forgot password */}
+              <div className="flex items-center justify-end">
                 <a href="#" className="text-sm text-primary-500 hover:text-primary-600 font-bold">
                   Forgot password?
                 </a>

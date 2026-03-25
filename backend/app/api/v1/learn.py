@@ -56,7 +56,7 @@ def get_lesson_content(lesson_id: UUID, db: Session = Depends(get_db), user: Use
 
 @router.post("/lessons/{lesson_id}/complete", response_model=LessonCompleteResponse)
 def complete_lesson(lesson_id: UUID, body: LessonCompleteRequest, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    result = learn_service.complete_lesson(db, lesson_id, body.quiz_score, body.total_questions, user)
+    result = learn_service.complete_lesson(db, lesson_id, body.quiz_score, body.total_questions, user, body.answers)
     if result is None:
         raise HTTPException(status_code=404, detail="Lesson not found")
     return result

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FaBook, FaGamepad, FaTrophy, FaStar, FaHeart } from 'react-icons/fa'
+import { FaBook, FaGamepad, FaTrophy, FaStar, FaHeart, FaUsers } from 'react-icons/fa'
 
 const features = [
   {
@@ -26,6 +26,14 @@ const features = [
     description: 'Earn stars, unlock badges, and climb the leaderboard. Every step counts!',
     color: 'from-accent-400 to-yellow-500',
     bg: 'bg-orange-50',
+  },
+  {
+    icon: <FaUsers className="text-3xl" />,
+    emoji: '👨‍👩‍👧‍👦',
+    title: 'Parent Tracking',
+    description: 'Parents can monitor and track their children\'s learning progress, scores, and achievements in real time.',
+    color: 'from-teal-400 to-cyan-500',
+    bg: 'bg-teal-50',
   },
 ]
 
@@ -205,7 +213,7 @@ export default function Landing() {
             </motion.div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, i) => (
               <motion.div
                 key={feature.title}
