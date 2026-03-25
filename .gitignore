@@ -29,6 +29,3 @@ Thumbs.db
 
 # ignore all Word documents
 *.docx
-
-# ignore text files (OPTIONAL)
-*.txt
