@@ -52,20 +52,22 @@ function GradeSelector({ grade, setGrade }) {
 
 function generateCards(grade, pairCount) {
   const pairs = []
-  const seen = new Set()
+  const seenQuestions = new Set()
+  const seenAnswers = new Set()
   let attempts = 0
-  while (pairs.length < pairCount && attempts < 200) {
+  while (pairs.length < pairCount && attempts < 500) {
     const p = generateProblem(grade)
-    const key = p.question
-    if (!seen.has(key)) {
-      seen.add(key)
+    const answerKey = String(p.answer)
+    // Ensure both unique questions AND unique answers
+    if (!seenQuestions.has(p.question) && !seenAnswers.has(answerKey)) {
+      seenQuestions.add(p.question)
+      seenAnswers.add(answerKey)
       pairs.push({ question: p.question, answer: p.answer })
     }
     attempts++
   }
 
   // Create card pairs: one card with the question, one with the answer
-  // All cards share the same back color so players can't match by color
   const cards = []
   pairs.forEach((pair, i) => {
     cards.push({
@@ -73,12 +75,14 @@ function generateCards(grade, pairCount) {
       pairId: i,
       display: pair.question,
       type: 'question',
+      answer: String(pair.answer),
     })
     cards.push({
       id: `a-${i}`,
       pairId: i,
       display: String(pair.answer),
       type: 'answer',
+      answer: String(pair.answer),
     })
   })
   return shuffle(cards)
@@ -126,12 +130,13 @@ export default function MathMemoryGame() {
     const c1 = cards[i1]
     const c2 = cards[i2]
 
-    if (c1.pairId === c2.pairId && c1.type !== c2.type) {
+    if (c1.answer === c2.answer && c1.type !== c2.type) {
       // Match found!
       setTimeout(() => {
         setMatched((prev) => {
           const next = new Set(prev)
           next.add(c1.pairId)
+          if (c1.pairId !== c2.pairId) next.add(c2.pairId)
           // Check win
           if (next.size === totalPairs) {
             clearInterval(timerRef.current)
