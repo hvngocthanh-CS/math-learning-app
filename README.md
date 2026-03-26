@@ -136,11 +136,11 @@ pip install -r requirements.txt
 
 3. Tạo file `.env`:
 ```env
-DATABASE_URL=postgresql://user:password@localhost:5432/mathquest
-JWT_SECRET=your-secret-key
-JWT_ALGORITHM=HS256
-JWT_EXPIRE_HOURS=24
-TEACHER_REGISTER_CODE=MATHQUEST2026
+DATABASE_URL
+JWT_SECRET
+JWT_ALGORITHM
+JWT_EXPIRE_HOURS
+TEACHER_REGISTER_CODE
 ```
 
 4. Seed dữ liệu:
@@ -152,13 +152,8 @@ python -m app.seed --reset      # Xóa hết và tạo lại (DESTRUCTIVE)
 
 5. Chạy server:
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8080
+uvicorn app.main:app --host X.X.X.X --port xxxx
 ```
-
-## Demo Accounts
-
-- **Teacher**: teacher@mathquest.com / password123
-- **Student**: student@mathquest.com / password123
 
 ## API Endpoints
 
