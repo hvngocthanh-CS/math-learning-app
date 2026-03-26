@@ -156,13 +156,6 @@ export default function Login() {
                 />
               </div>
 
-              {/* Forgot password */}
-              <div className="flex items-center justify-end">
-                <a href="#" className="text-sm text-primary-500 hover:text-primary-600 font-bold">
-                  Forgot password?
-                </a>
-              </div>
-
               {/* Submit */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
